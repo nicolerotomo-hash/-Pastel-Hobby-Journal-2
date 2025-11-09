@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Pastel Hobby Journal ✧ Pixel</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="manifest" href="manifest.webmanifest" />
+  <meta name="theme-color" content="#fce7f3" />
+  <style>
+    @keyframes floaty {0%{transform:translateY(0)}50%{transform:translateY(-4px)}100%{transform:translateY(0)}}
+    @keyframes slideIn {from{opacity:0;transform:translateX(16px)} to{opacity:1;transform:translateX(0)}}
+    .floaty{animation:floaty 5s ease-in-out infinite}
+    .page-anim{animation:slideIn .35s ease-out}
+    .pixel{image-rendering:pixelated}
+    .notebook-paper{
+      background-image:
+        linear-gradient(to right, transparent 64px, rgba(255,99,99,.25) 64px, rgba(255,99,99,.25) 66px, transparent 66px),
+        repeating-linear-gradient(to bottom, rgba(255,182,193,.25) 0px, rgba(255,182,193,.25) 1px, transparent 1px, transparent 28px);
+      background-size: cover;
+    }
+  </style>
+</head>
+<body class="min-h-screen bg-pink-50">
+  <div class="min-h-screen p-6 font-sans">
+    <div class="max-w-2xl mx-auto bg-white shadow-lg rounded-2xl border border-pink-200 overflow-hidden">
+      <!-- header -->
+      <div class="bg-gradient-to-r from-pink-100 via-rose-50 to-pink-100 p-5 flex items-center justify-between border-b border-pink-200">
+        <div class="flex items-center gap-2 text-pink-600">
+          <span class="pixel">✿</span><span class="pixel">✧</span><span class="pixel">✿</span>
+          <h1 class="text-2xl font-bold ml-2">My Hobby Journal (Pastel ✧ Pixel)</h1>
+        </div>
+        <button id="installBtn" class="hidden px-3 py-1 text-xs bg-pink-500 text-white rounded-lg">Install App</button>
+      </div>
+
+      <!-- nav -->
+      <div class="px-6 pt-4 pb-2 flex items-center gap-6 text-pink-600">
+        <button data-page="home"    class="navbtn flex flex-col items-center text-xs"><div class="w-6 h-6 mb-1 pixel">🍵</div>Home</button>
+        <button data-page="journal" class="navbtn flex flex-col items-center text-xs"><div class="w-6 h-6 mb-1 pixel">🌼</div>Journal</button>
+        <button data-page="draw"    class="navbtn flex flex-col items-center text-xs"><div class="w-6 h-6 mb-1 pixel">🎨</div>Draw</button>
+        <button data-page="notes"   class="navbtn flex flex-col items-center text-xs"><div class="w-6 h-6 mb-1 pixel">⭐</div>Notes</button>
+      </div>
+
+      <!-- body -->
+      <div class="p-6 notebook-paper">
+        <div id="page" class="page-anim"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ----- state & storage helpers -----
+    const $ = s => document.querySelector(s);
+    const $$ = s => Array.from(document.querySelectorAll(s));
+    const save = (k,v)=>localStorage.setItem(k, JSON.stringify(v));
+    const load = (k,def)=>{ try{return JSON.parse(localStorage.getItem(k)??'null') ?? def}catch{return def} };
+
+    // ----- pages -----
+    const state = {
+      page: load('page','journal'),
+      posts: load('posts', []),
+      brushColor: '#ef9aa9',
+      brushSize: 3,
+    };
+
+    const pastel = ['#ef9aa9','#f6c1cf','#ffd9e2','#c2e6f4','#bfe8d9','#f7e8a4','#d7c9ff','#ffc9a9'];
+
+    function Home(){
+      return `
+        <div class="text-center p-6 text-pink-700 text-lg">Welcome to your cozy pixel world 🌷✨</div>
+      `;
+    }
+
+    function Journal(){
+      const items = state.posts.map(p=>`
+        <div class="relative p-4 rounded-2xl border border-pink-200 bg-white/80 shadow floaty">
+          <div class="absolute -top-2 -left-2 -rotate-6 opacity-80">✧</div>
+          <div class="absolute -top-2 right-2 rotate-8 opacity-80">❤</div>
+          <div class="text-sm">✧ ${p.text}</div>
+        </div>`).join('');
+      return `
+        <div class="bg-white/70 backdrop-blur rounded-2xl border border-pink-200 p-4 mb-5 shadow-sm">
+          <div class="flex gap-2 mb-3">
+            <input id="postInput" class="flex-1 border border-pink-300 rounded-xl p-2 focus:outline-none focus:ring-2 focus:ring-pink-200" placeholder="Write a cozy update… ✿" />
+            <button id="addPostBtn" class="px-4 py-2 bg-pink-400 text-white rounded-xl shadow">Post</button>
+          </div>
+          <div class="text-xs text-pink-500 mb-3">Auto-saves ✨</div>
+          <div class="grid gap-3">${items || `<div class="text-sm text-pink-500">No posts yet—write your first one! 🌸</div>`}</div>
+        </div>
+      `;
+    }
+
+    function Draw(){
+      const palette = pastel.map(c=>`<button data-color="${c}" class="w-6 h-6 rounded-md border border-pink-200" style="background:${c}"></button>`).join('');
+      return `
+        <div class="bg-white/70 backdrop-blur rounded-2xl border border-pink-200 p-4 shadow-sm">
+          <div class="flex items-center justify-between mb-3 gap-3">
+            <h2 class="text-lg font-semibold text-pink-600">Draw Corner 🎨</h2>
+            <div class="flex items-center gap-2">${palette}
+              <input id="brushRange" type="range" min="1" max="12" value="${state.brushSize}" class="w-24" />
+              <button id="clearCanvas" class="px-3 py-1 text-xs bg-rose-200 rounded-lg border border-pink-300">Clear</button>
+            </div>
+          </div>
+          <div class="rounded-xl border border-pink-300 bg-white shadow cursor-crosshair overflow-hidden">
+            <canvas id="board" width="560" height="260"></canvas>
+          </div>
+          <div class="mt-2 text-xs text-pink-500">Auto-saves when you lift your finger/stylus 💞</div>
+        </div>
+      `;
+    }
+
+    function Notes(){
+      return `
+        <div class="p-4">
+          <h2 class="text-lg font-semibold text-pink-600 mb-2">Whisper Box 💬✨</h2>
+          <textarea class="w-full h-40 p-3 border border-pink-300 rounded-xl bg-rose-50 text-sm" placeholder="Talk to your journal…"></textarea>
+        </div>
+      `;
+    }
+
+    const views = { home: Home, journal: Journal, draw: Draw, notes: Notes };
+
+    function render(){
+      save('page', state.page);
+      $('#page').innerHTML = views[state.page]();
+      highlightNav();
+
+      if(state.page === 'journal'){
+        $('#addPostBtn').onclick = ()=>{
+          const val = $('#postInput').value.trim();
+          if(!val) return;
+          state.posts.push({ id: Date.now(), text: val });
+          save('posts', state.posts);
+          render();
+        };
+      }
+      if(state.page === 'draw') setupCanvas();
+    }
+
+    function highlightNav(){
+      $$('.navbtn').forEach(b=>{
+        b.classList.toggle('text-pink-800', b.dataset.page===state.page);
+        b.classList.toggle('hover:text-pink-800', b.dataset.page!==state.page);
+        b.classList.toggle('text-pink-600', b.dataset.page!==state.page);
+      });
+    }
+
+    // nav clicks
+    $$('.navbtn').forEach(b=>b.addEventListener('click', ()=>{ state.page=b.dataset.page; render(); }));
+
+    // ----- canvas -----
+    function setupCanvas(){
+      const c = $('#board'), ctx = c.getContext('2d');
+      ctx.lineCap='round'; ctx.lineJoin='round';
+      let drawing=false;
+
+      // load saved
+      const saved = localStorage.getItem('drawing');
+      if(saved){ const img=new Image(); img.onload=()=>ctx.drawImage(img,0,0); img.src=saved; }
+
+      function pos(e){ const r=c.getBoundingClientRect(); const x=(e.clientX??e.touches?.[0]?.clientX)-r.left; const y=(e.clientY??e.touches?.[0]?.clientY)-r.top; return {x,y}; }
+      function start(e){ e.preventDefault(); drawing=true; const {x,y}=pos(e); ctx.strokeStyle=state.brushColor; ctx.lineWidth=state.brushSize; ctx.beginPath(); ctx.moveTo(x,y); }
+      function move(e){ if(!drawing) return; e.preventDefault(); const {x,y}=pos(e); ctx.lineTo(x,y); ctx.stroke(); ctx.beginPath(); ctx.moveTo(x,y); }
+      function end(){ drawing=false; try{ localStorage.setItem('drawing', c.toDataURL('image/png')); }catch{} }
+
+      c.addEventListener('mousedown',start); c.addEventListener('mousemove',move); c.addEventListener('mouseup',end); c.addEventListener('mouseleave',end);
+      c.addEventListener('touchstart',start,{passive:false}); c.addEventListener('touchmove',move,{passive:false}); c.addEventListener('touchend',end);
+
+      $('#brushRange').oninput = e=>{ state.brushSize = parseInt(e.target.value); };
+      $$('.flex .w-6.h-6').forEach(btn=>{
+        btn.onclick = ()=>{ state.brushColor = btn.style.backgroundColor; };
+      });
+      $('#clearCanvas').onclick = ()=>{ ctx.clearRect(0,0,c.width,c.height); localStorage.removeItem('drawing'); };
+    }
+
+    // ----- PWA install prompt -----
+    let deferredPrompt=null;
+    window.addEventListener('beforeinstallprompt', (e)=>{
+      e.preventDefault(); deferredPrompt=e;
+      $('#installBtn').classList.remove('hidden');
+    });
+    $('#installBtn').onclick = async ()=>{
+      if(!deferredPrompt) return;
+      deferredPrompt.prompt(); await deferredPrompt.userChoice;
+      deferredPrompt=null; $('#installBtn').classList.add('hidden');
+    };
+
+    // service worker
+    if('serviceWorker' in navigator){ navigator.serviceWorker.register('./sw.js'); }
+
+    // init
+    render();
+  </script>
+</body>
+</html>
